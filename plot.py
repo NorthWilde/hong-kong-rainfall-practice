@@ -71,7 +71,7 @@ def main():
         print(f"{month:02}: {total:.1f} mm")
 
     # 用颜色显示每个格子的数值
-        fig, (ax, bars) = plt.subplots(
+    fig, (ax, bars) = plt.subplots(
         1, 2,
         figsize=(16, 6),
         gridspec_kw={"width_ratios": [4, 1]},
@@ -100,6 +100,23 @@ def main():
     ax.set_xlabel("Day of month")
     ax.set_ylabel("Month")
     ax.set_title("Hong Kong daily precipitation | 2025")
+        # 找到降水量最大的一条记录
+    peak_day, peak_amount = max(table, key=lambda row: row[1])
+    peak_date = date.fromisoformat(peak_day)
+
+    ax.scatter(
+        peak_date.day - 1,
+        peak_date.month - 1,
+        s=150,
+        facecolors="none",
+        edgecolors="#d07836",
+        linewidths=2,
+    )
+
+    ax.set_title(
+        "Hong Kong daily precipitation | 2025\n"
+        f"Wettest day: {peak_day} / {peak_amount:.1f} mm"
+    )
 
     # 找出降水最多的月份，用橙色突出显示
     wettest = monthly.index(max(monthly))
