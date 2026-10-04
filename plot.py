@@ -13,12 +13,12 @@ file needs reading, the loop in main() picks the numbers out of it, and the plot
 the bottom is the transformation you chose. Print before you plot.
 """
 
-import csv
+import json
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-FILE = "hko-daily-mean-temperature-2026.csv"   # CHANGE ME: the same name as in fetch.py
+FILE = "hong-kong-precipitation-2025.json"   # CHANGE ME: the same name as in fetch.py
 PICTURE = "plot.png"                           # what goes into out/, and into the README
 
 HERE = Path(__file__).parent
@@ -27,40 +27,24 @@ OUT = HERE / "out"
 
 
 def rows(path):
-    """The file as a list of lists, one per line. The Observatory puts three lines
-    of titles above the table and a legend below it, so keep only the lines that
-    start with a year."""
-    kept = []
-    with path.open(encoding="utf-8-sig", newline="") as handle:
-        for line in csv.reader(handle):
-            if line and line[0].isdigit():
-                kept.append(line)
-    return kept
+    with path.open(encoding="utf-8") as handle:
+        data = json.load(handle)
+
+    dates = data["daily"]["time"]
+    amounts = data["daily"]["precipitation_sum"]
+
+    if len(dates) != len(amounts):
+        raise ValueError("日期和降水数值的数量不一致")
+
+    return list(zip(dates, amounts))
 
 
 def main():
     table = rows(DATA)
-    print(f"{DATA.name}: {len(table)} rows. The first one: {table[0]}")
+    print(f"{DATA.name}: {len(table)} rows.")
 
-    days, values = [], []
-    for i, (year, month, day, value, quality) in enumerate(table):   # the loop over the numbers
-        if value == "***":                   # the Observatory's word for "missing"
-            continue
-        days.append(i + 1)
-        values.append(float(value))          # it arrived as text; make it a number
-    print(f"{len(values)} values, from {min(values)} to {max(values)}")
-
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(days, values, color="#d6591d", linewidth=1.5)
-    ax.set_xlabel("day of 2026")
-    ax.set_ylabel("daily mean temperature, °C")
-    ax.set_title("Hong Kong Observatory, 2026 so far")
-    fig.tight_layout()
-
-    OUT.mkdir(exist_ok=True)
-    fig.savefig(OUT / PICTURE, dpi=150)
-    print(f"saved out/{PICTURE}")
-    plt.show()
+    for day, amount in table[:5]:
+        print(f"{day}: {amount} mm")
 
 
 if __name__ == "__main__":
